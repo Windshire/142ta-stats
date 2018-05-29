@@ -103,7 +103,7 @@ public:
 	string getMostFrequent() const {
 		return max_element(studentsHelped.begin(), studentsHelped.end(), [] (pair<string, int> compare1, pair<string, int> compare2) {return compare1.second < compare2.second;})->first;
 	}
-	string toString() {
+	string toString() const {
 		ostringstream out;
 		out << left;
 		out << setw(20) << name;
@@ -134,7 +134,7 @@ bool contains(const vector<TeachingAssistant> &teachingAssistants, string name) 
 
 string currentDate;
 
-HelpInstance extract(string row) {
+HelpInstance parseHelpInstance(string row) {
 	HelpInstance help;
 	string cell;
 
@@ -172,19 +172,41 @@ HelpInstance extract(string row) {
 	return help;
 }
 
-int main() {
-	ifstream file("hhh.csv");
-	string row;
-	string currentDate;
-	vector<HelpInstance> helpInstances;
-	vector<TeachingAssistant> teachingAssistants;
+string PrintInLabResults(const vector<TeachingAssistant> &teachingAssistants) {
+	ostringstream out;
+	out << left << setw(20) << "Name";
+	out << setw(10) << "Helped";
+	out << setw(10) << "Unique";
+	out << setw(15) << "Most Helped";
+	out << endl;
+	out << setfill('-') << setw(80) << "-" << endl;
+	for (int i = 0; i < teachingAssistants.size(); ++i) {
+		out << teachingAssistants.at(i).toString() << endl;
+	}
+	return out.str();
+}
 
-	while (file.good()) {
-		getline(file, row);
+vector<HelpInstance> extractInLabFile(string fileloc) {
+	vector<HelpInstance> inLab;
+	ifstream inLabFile;
+	string row;
+
+	inLabFile.open(fileloc);
+
+	while (inLabFile.good()) {
+		getline(inLabFile, row);
 		if (row != ",,,,,,," && row != "") {
-			helpInstances.push_back(extract(row));
+			inLab.push_back(parseHelpInstance(row));
 		}
 	}
+
+	inLabFile.close();
+
+	return inLab;
+}
+
+vector<TeachingAssistant> assignInstancesToTA(vector<HelpInstance> helpInstances) {
+	vector<TeachingAssistant> teachingAssistants;
 
 	for (int i = 0; i < helpInstances.size(); ++i) {
 		if (!contains(teachingAssistants, helpInstances.at(i).getHelper())) {
@@ -199,15 +221,23 @@ int main() {
 		teachingAssistants.at(thisTA).addInstance(helpInstances.at(i));
 	}
 
-	cout << left << setw(20) << "Name";
-	cout << setw(10) << "Helped";
-	cout << setw(10) << "Unique";
-	cout << setw(15) << "Most Helped";
-	cout << endl;
-	cout << setfill('-') << setw(80) << "-" << endl;
-	for (int i = 0; i < teachingAssistants.size(); ++i) {
-		cout << teachingAssistants.at(i).toString() << endl;
+	return teachingAssistants;
+}
+
+void populateArgs(string &inLabFile, string &gradingFile, int argc, char *argv[]) {
+	if(argc == 1) {
+		inLabFile = "inlab.csv";
 	}
+	else if (argc == 3) {
 
+	}
+}
 
+int main(int argc, char *argv[]) {
+
+	string inLabFileLoc, gradingFileLoc;
+	populateArgs(inLabFileLoc, gradingFileLoc, argc, argv);
+
+	cout << PrintInLabResults(assignInstancesToTA(extractInLabFile(inLabFileLoc)));
+	
 }
