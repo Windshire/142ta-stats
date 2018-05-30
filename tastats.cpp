@@ -10,8 +10,23 @@
 
 using namespace std;
 
+class Instance {
+protected:
+	string taName;
+	string student;
+public:
+	void addStudent(string student) {
+		this->student = student;
+	}
+	string getTaName() {
+		return taName;
+	}
+	string getStudent() const {
+		return student;
+	}
+};
 
-class HelpInstance {
+class HelpInstance : public Instance {
 private:
 	static string currentDate;
 	string date;
@@ -30,11 +45,9 @@ public:
 	void addDate(string date) {
 		this->date = date;
 	}
-	void addStudent(string student) {
-		this->student = student;
-	}
 	void addHelper(string helper) {
 		this->helper = helper;
+		this->taName = helper;
 	}
 	void addEnqueue(string enqueue) {
 		this->enqueue = enqueue;
@@ -53,9 +66,6 @@ public:
 	}
 	string getCurrentDate() const {
 		return currentDate;
-	}
-	string getStudent() const {
-		return student;
 	}
 	string getHelper() const {
 		return helper;
@@ -78,16 +88,47 @@ public:
 	}
 };
 
+class GradeInstance : public Instance {
+private:
+	string date;
+	string student;
+	string grader;
+	string assignment;
+	string before;
+	string after;
+	string current;
+public:
+	void addDate(string date) {
+		this->date = date;
+	}
+	void addGrader(string grader) {
+		this->grader = grader;
+		this->taName = grader;
+	}
+	void addAssignment(string assignment) {
+		this->assignment = assignment;
+	}
+	void addBefore(string before) {
+		this->before = before;
+	}
+	void addAfter(string after) {
+		this->after = after;
+	}
+	void addCurrent(string current) {
+		this->current = current;
+	}
+};
+
 class TeachingAssistant {
 private:
 	string name;
-	vector<HelpInstance> helpInstances;
+	vector<Instance> helpInstances;
 	map<string, int> studentsHelped;
 public:
 	TeachingAssistant(string name) {
 		this->name = name;
 	}
-	void addInstance(HelpInstance help) {
+	void addInstance(Instance help) {
 		helpInstances.push_back(help);
 		studentsHelped[help.getStudent()]++;
 	}
@@ -172,6 +213,36 @@ HelpInstance parseHelpInstance(string row) {
 	return help;
 }
 
+GradeInstance parseGradingInstance(string row) {
+	GradeInstance grade;
+	string cell;
+
+	istringstream line(row);
+
+	getline(line, cell, ',');
+	grade.addDate(cell);
+
+	getline(line, cell, ',');
+	grade.addStudent(cell);
+
+	getline(line, cell, ',');
+	grade.addGrader(cell);
+
+	getline(line, cell, ',');
+	grade.addAssignment(cell);
+
+	getline(line, cell, ',');
+	grade.addBefore(cell);
+
+	getline(line, cell, ',');
+	grade.addAfter(cell);
+
+	getline(line, cell, ',');
+	grade.addCurrent(cell);
+
+	return grade;
+}
+
 string PrintInLabResults(const vector<TeachingAssistant> &teachingAssistants) {
 	ostringstream out;
 	out << left << setw(20) << "Name";
@@ -186,8 +257,8 @@ string PrintInLabResults(const vector<TeachingAssistant> &teachingAssistants) {
 	return out.str();
 }
 
-vector<HelpInstance> extractInLabFile(string fileloc) {
-	vector<HelpInstance> inLab;
+vector<Instance> extractInLabFile(string fileloc) {
+	vector<Instance> inLab;
 	ifstream inLabFile;
 	string row;
 
@@ -205,20 +276,39 @@ vector<HelpInstance> extractInLabFile(string fileloc) {
 	return inLab;
 }
 
-vector<TeachingAssistant> assignInstancesToTA(vector<HelpInstance> helpInstances) {
+vector<GradeInstance> extractGradingFile(string fileloc) {
+	vector<GradeInstance> grading;
+	ifstream gradingFile;
+	string row;
+
+	gradingFile.open(fileloc);
+
+	while (gradingFile.good()) {
+		getline(gradingFile, row);
+		if (row != ",,,,,,," && row != "") {
+			grading.push_back(parseGradingInstance(row));
+		}
+	}
+
+	gradingFile.close();
+
+	return grading;
+}
+
+vector<TeachingAssistant> assignInstancesToTA(vector<Instance> instances) {
 	vector<TeachingAssistant> teachingAssistants;
 
-	for (int i = 0; i < helpInstances.size(); ++i) {
-		if (!contains(teachingAssistants, helpInstances.at(i).getHelper())) {
-			if (helpInstances.at(i).getHelper() == "") {
+	for (int i = 0; i < instances.size(); ++i) {
+		if (!contains(teachingAssistants, instances.at(i).getTaName())) {
+			if (instances.at(i).getTaName() == "") {
 				continue;
 			}
 			else {
-				teachingAssistants.push_back(TeachingAssistant(helpInstances.at(i).getHelper()));
+				teachingAssistants.push_back(TeachingAssistant(instances.at(i).getTaName()));
 			}
 		}
-		unsigned int thisTA = index(teachingAssistants, helpInstances.at(i).getHelper());
-		teachingAssistants.at(thisTA).addInstance(helpInstances.at(i));
+		unsigned int thisTA = index(teachingAssistants, instances.at(i).getTaName());
+		teachingAssistants.at(thisTA).addInstance(instances.at(i));
 	}
 
 	return teachingAssistants;
@@ -227,6 +317,7 @@ vector<TeachingAssistant> assignInstancesToTA(vector<HelpInstance> helpInstances
 void populateArgs(string &inLabFile, string &gradingFile, int argc, char *argv[]) {
 	if(argc == 1) {
 		inLabFile = "inlab.csv";
+		gradingFile = "grading.csv";
 	}
 	else if (argc == 3) {
 
@@ -239,5 +330,18 @@ int main(int argc, char *argv[]) {
 	populateArgs(inLabFileLoc, gradingFileLoc, argc, argv);
 
 	cout << PrintInLabResults(assignInstancesToTA(extractInLabFile(inLabFileLoc)));
-	
+
+	vector<GradeInstance> grades = extractGradingFile(gradingFileLoc);
+
+	cout << grades.size() << endl;
+
+/*
+	ifstream gradingFile(gradingFileLoc);
+	while(gradingFile.good()) {
+		string line;
+		getline(gradingFile, line);
+		cout << line << endl;
+	}
+	*/
+
 }
