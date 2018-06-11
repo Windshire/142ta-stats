@@ -14,6 +14,7 @@ class Instance {
 protected:
 	string taName;
 	string student;
+	int duration; //in seconds
 public:
 	void addStudent(string student) {
 		this->student = student;
@@ -24,6 +25,10 @@ public:
 	string getStudent() const {
 		return student;
 	}
+	int getDuration() const {
+		return duration;
+	}
+
 };
 
 class HelpInstance : public Instance {
@@ -36,7 +41,6 @@ private:
 	string dequeue;
 	string wait;
 	string type;
-	string duration;
 
 public:
 	void addCurrentDate(string date) {
@@ -62,13 +66,24 @@ public:
 		this->type = type;
 	}
 	void addDuration(string duration) {
-		this->duration = duration;
+		if (duration != "None") {
+			const int MIN_LENGTH = 60;
+			string min = duration.substr(0,2);
+			string sec = duration.substr(3,2);
+			this->duration = (stoi(min)*MIN_LENGTH) + stoi(sec);
+		}
+		else {
+			this->duration = 0;
+		}
 	}
 	string getCurrentDate() const {
 		return currentDate;
 	}
 	string getHelper() const {
 		return helper;
+	}
+	int getDuration() const {
+		return duration;
 	}
 	/*int getDuration() const {
 		int minutes, seconds;
@@ -144,6 +159,33 @@ public:
 	string getMostFrequent() const {
 		return max_element(studentsHelped.begin(), studentsHelped.end(), [] (pair<string, int> compare1, pair<string, int> compare2) {return compare1.second < compare2.second;})->first;
 	}
+	int getTotalTime() const {
+		double totalTime;
+		for (int i = 0; i < helpInstances.size(); i++) {
+			totalTime += helpInstances.at(i).getDuration();
+		}
+		return totalTime;
+	}
+	string doubleClicks() const {
+		int doubleClicks;
+		const int DOUBLE_CLICK_THRESHOLD = 10;
+		for (int i = 0; i < helpInstances.size(); i++) {
+			if (helpInstances.at(i).getDuration() < DOUBLE_CLICK_THRESHOLD) {
+				doubleClicks++;
+			}
+		}
+		return to_string(doubleClicks);
+	}
+	string getAverageTime() const {
+		ostringstream out;
+		out << fixed << setprecision(2) << setw(6) << (getTotalTime()/helpInstances.size()/60.0) << " mins";
+		return out.str();
+	}
+	string getTotalHours() const {
+		ostringstream out;
+		out << fixed << setprecision(2) << setw(4) << (getTotalTime() / 60.0 / 60.0) << " hrs";
+		return out.str();
+	}
 	string toString() const {
 		ostringstream out;
 		out << left;
@@ -151,6 +193,9 @@ public:
 		out << setw(10) << getHelpInstanceTotal();
 		out << setw(10) << getUniqueTotal();
 		out << setw(15) << getMostFrequent();
+		out << setw(15) << getAverageTime();
+		out << setw(15) << getTotalHours();
+		out << setw(15) << doubleClicks();
 		/*for (HelpInstance help : helpInstances) {
 			out << help.getDuration() << endl;
 		}*/
@@ -249,10 +294,15 @@ string PrintInLabResults(const vector<TeachingAssistant> &teachingAssistants) {
 	out << setw(10) << "Helped";
 	out << setw(10) << "Unique";
 	out << setw(15) << "Most Helped";
+	out << setw(15) << "Average Time";
+	out << setw(15) << "Total Time";
+	out << setw(15) << "Doubleclicks";
 	out << endl;
-	out << setfill('-') << setw(80) << "-" << endl;
+	out << setfill('-') << setw(100) << "-" << endl;
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
-		out << teachingAssistants.at(i).toString() << endl;
+		if (teachingAssistants.at(i).getName() != "Themselves") {
+			out << teachingAssistants.at(i).toString() << endl;
+		}
 	}
 	return out.str();
 }
@@ -333,7 +383,7 @@ int main(int argc, char *argv[]) {
 
 	vector<GradeInstance> grades = extractGradingFile(gradingFileLoc);
 
-	cout << grades.size() << endl;
+	//cout << grades.size() << endl;
 
 /*
 	ifstream gradingFile(gradingFileLoc);
