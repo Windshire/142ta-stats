@@ -421,7 +421,7 @@ void populateArgs(string &inLabFile, string &gradingFile, int argc, char *argv[]
 string PrintGradingResults(const vector<TeachingAssistant> &teachingAssistants) {
 	ostringstream out;
 
-	std::sort(teachingAssistants.begin(), teachingAssistants.end());
+	//std::sort(teachingAssistants.begin(), teachingAssistants.end());
 
 	out << "NUMBER OF ASSIGNMENTS GRADED" << endl;
 
