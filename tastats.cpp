@@ -336,7 +336,8 @@ string PrintInLabResults(vector<TeachingAssistant> teachingAssistants) {
 	std::sort(teachingAssistants.begin(), teachingAssistants.end());
 
 	ostringstream out;
-	out << left << setw(20) << "Name";
+	out << left << setw(5) << "Num";
+	out << setw(20) << "Name";
 	out << setw(10) << "Helped";
 	out << setw(10) << "Unique";
 	out << setw(25) << "Most Helped";
@@ -344,10 +345,12 @@ string PrintInLabResults(vector<TeachingAssistant> teachingAssistants) {
 	out << setw(15) << "Total Time";
 	out << setw(15) << "Doubleclicks";
 	out << endl;
-	out << setfill('-') << setw(110) << "-" << endl;
+	out << setfill('-') << setw(112) << "-" << endl;
+	out << setfill(' ');
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
 		if (teachingAssistants.at(i).getName() != "Themselves") {
-			out << teachingAssistants.at(i).toString() << endl;
+			string num = to_string(i+1) + '.';
+			out << setw(5) << num << teachingAssistants.at(i).toString() << endl;
 		}
 	}
 	return out.str();
@@ -430,12 +433,13 @@ string PrintGradingResults(vector<TeachingAssistant> teachingAssistants) {
 
 	out << endl;
 	out << "NUMBER OF ASSIGNMENTS GRADED" << endl;
-	out << setfill('-') << setw(110) << "-" << endl;
+	out << setfill('-') << setw(28) << "-" << endl;
 	out << setfill(' ');
 
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
 		if (teachingAssistants.at(i).getName() != "Not available") {
-			out << left << setw(20) << teachingAssistants.at(i).getName() << setw(10) << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
+			string num = to_string(i+1) + '.';
+			out << left << setw(5) << num << setw(20) << teachingAssistants.at(i).getName() << setw(10) << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
 		}
 	}
 
