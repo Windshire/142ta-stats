@@ -15,6 +15,8 @@ protected:
 	string taName;
 	string student;
 	int duration; //in seconds
+	bool valid;
+
 public:
 	void addStudent(string student) {
 		this->student = student;
@@ -27,6 +29,12 @@ public:
 	}
 	int getDuration() const {
 		return duration;
+	}
+	bool isValid() const {
+		return valid;
+	}
+	void setValid(bool valid) {
+		this->valid = valid;
 	}
 
 };
@@ -106,6 +114,7 @@ public:
 class GradeInstance : public Instance {
 private:
 	string date;
+	string anonymous;
 	string student;
 	string grader;
 	string assignment;
@@ -115,6 +124,9 @@ private:
 public:
 	void addDate(string date) {
 		this->date = date;
+	}
+	void addAnonymous(string anonymous) {
+		this->anonymous = anonymous;
 	}
 	void addGrader(string grader) {
 		this->grader = grader;
@@ -144,8 +156,10 @@ public:
 		this->name = name;
 	}
 	void addInstance(Instance help) {
-		helpInstances.push_back(help);
-		studentsHelped[help.getStudent()]++;
+		if (help.isValid()) {
+			helpInstances.push_back(help);
+			studentsHelped[help.getStudent()]++;
+		}
 	}
 	string getName() const {
 		return name;
@@ -192,7 +206,7 @@ public:
 		out << setw(20) << name;
 		out << setw(10) << getHelpInstanceTotal();
 		out << setw(10) << getUniqueTotal();
-		out << setw(15) << getMostFrequent();
+		out << setw(25) << getMostFrequent();
 		out << setw(15) << getAverageTime();
 		out << setw(15) << getTotalHours();
 		out << setw(15) << doubleClicks();
@@ -200,6 +214,9 @@ public:
 			out << help.getDuration() << endl;
 		}*/
 		return out.str();
+	}
+	bool operator < (const TeachingAssistant &comp) {
+		return (this->getHelpInstanceTotal() > comp.getHelpInstanceTotal());
 	}
 };
 
@@ -255,6 +272,8 @@ HelpInstance parseHelpInstance(string row) {
 	getline(line, cell, ',');
 	help.addDuration(cell);
 
+	help.setValid(true);
+
 	return help;
 }
 
@@ -264,26 +283,50 @@ GradeInstance parseGradingInstance(string row) {
 
 	istringstream line(row);
 
+	//cout << "LINE: " << line.str() << endl;
+
+	string date;
 	getline(line, cell, ',');
-	grade.addDate(cell);
+	date += cell;
+	getline(line, cell, ',');
+	date += cell;
+	grade.addDate(date);
+	//cout << "date: " << date << endl;
+
+	getline(line, cell, ',');
+	grade.addAnonymous(cell);
+	//cout << "anonymous: " << cell << endl;
 
 	getline(line, cell, ',');
 	grade.addStudent(cell);
+	//cout << "student: " << cell << endl;
 
 	getline(line, cell, ',');
 	grade.addGrader(cell);
+	//cout << "GRADER NAME: " << cell << endl;
 
 	getline(line, cell, ',');
 	grade.addAssignment(cell);
+	//cout << "assignment: " << cell << endl;
 
 	getline(line, cell, ',');
 	grade.addBefore(cell);
+	//cout << "previous grade: " << cell << endl;
+	if(cell == "0/100") {
+		//cout << "`````````````AYYY~~~~~~~~~~~~~~~~~~" << endl;
+		grade.setValid(true);
+	}
+	else {
+		grade.setValid(false);
+	}
 
 	getline(line, cell, ',');
 	grade.addAfter(cell);
+	//cout << "new grade: " << cell << endl;
 
 	getline(line, cell, ',');
 	grade.addCurrent(cell);
+	//cout << "most recent grade: " << cell << endl;
 
 	return grade;
 }
@@ -293,12 +336,12 @@ string PrintInLabResults(const vector<TeachingAssistant> &teachingAssistants) {
 	out << left << setw(20) << "Name";
 	out << setw(10) << "Helped";
 	out << setw(10) << "Unique";
-	out << setw(15) << "Most Helped";
+	out << setw(25) << "Most Helped";
 	out << setw(15) << "Average Time";
 	out << setw(15) << "Total Time";
 	out << setw(15) << "Doubleclicks";
 	out << endl;
-	out << setfill('-') << setw(100) << "-" << endl;
+	out << setfill('-') << setw(110) << "-" << endl;
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
 		if (teachingAssistants.at(i).getName() != "Themselves") {
 			out << teachingAssistants.at(i).toString() << endl;
@@ -326,8 +369,8 @@ vector<Instance> extractInLabFile(string fileloc) {
 	return inLab;
 }
 
-vector<GradeInstance> extractGradingFile(string fileloc) {
-	vector<GradeInstance> grading;
+vector<Instance> extractGradingFile(string fileloc) {
+	vector<Instance> grading;
 	ifstream gradingFile;
 	string row;
 
@@ -349,6 +392,7 @@ vector<TeachingAssistant> assignInstancesToTA(vector<Instance> instances) {
 	vector<TeachingAssistant> teachingAssistants;
 
 	for (int i = 0; i < instances.size(); ++i) {
+
 		if (!contains(teachingAssistants, instances.at(i).getTaName())) {
 			if (instances.at(i).getTaName() == "") {
 				continue;
@@ -374,16 +418,30 @@ void populateArgs(string &inLabFile, string &gradingFile, int argc, char *argv[]
 	}
 }
 
+string PrintGradingResults(const vector<TeachingAssistant> &teachingAssistants) {
+	ostringstream out;
+
+	std::sort(teachingAssistants.begin(), teachingAssistants.end());
+
+	out << "NUMBER OF ASSIGNMENTS GRADED" << endl;
+
+	for (int i = 0; i < teachingAssistants.size(); ++i) {
+		if (teachingAssistants.at(i).getName() != "Not available") {
+			out << teachingAssistants.at(i).getName() << " " << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
+		}
+	}
+
+	return out.str();
+}
+
 int main(int argc, char *argv[]) {
 
 	string inLabFileLoc, gradingFileLoc;
 	populateArgs(inLabFileLoc, gradingFileLoc, argc, argv);
 
-	cout << PrintInLabResults(assignInstancesToTA(extractInLabFile(inLabFileLoc)));
+	cout << PrintInLabResults(assignInstancesToTA(extractInLabFile(inLabFileLoc))) << endl;
+	cout << PrintGradingResults(assignInstancesToTA(extractGradingFile(gradingFileLoc)));
 
-	vector<GradeInstance> grades = extractGradingFile(gradingFileLoc);
-
-	//cout << grades.size() << endl;
 
 /*
 	ifstream gradingFile(gradingFileLoc);
