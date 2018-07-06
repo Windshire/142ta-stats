@@ -331,7 +331,10 @@ GradeInstance parseGradingInstance(string row) {
 	return grade;
 }
 
-string PrintInLabResults(const vector<TeachingAssistant> &teachingAssistants) {
+string PrintInLabResults(vector<TeachingAssistant> teachingAssistants) {
+
+	std::sort(teachingAssistants.begin(), teachingAssistants.end());
+
 	ostringstream out;
 	out << left << setw(20) << "Name";
 	out << setw(10) << "Helped";
@@ -418,16 +421,21 @@ void populateArgs(string &inLabFile, string &gradingFile, int argc, char *argv[]
 	}
 }
 
-string PrintGradingResults(const vector<TeachingAssistant> &teachingAssistants) {
+string PrintGradingResults(vector<TeachingAssistant> teachingAssistants) {
 	ostringstream out;
 
-	//std::sort(teachingAssistants.begin(), teachingAssistants.end());
+	//vector<TeachingAssistant> temp = teachingAssistants;
 
+	std::sort(teachingAssistants.begin(), teachingAssistants.end());
+
+	out << endl;
 	out << "NUMBER OF ASSIGNMENTS GRADED" << endl;
+	out << setfill('-') << setw(110) << "-" << endl;
+	out << setfill(' ');
 
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
 		if (teachingAssistants.at(i).getName() != "Not available") {
-			out << teachingAssistants.at(i).getName() << " " << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
+			out << left << setw(20) << teachingAssistants.at(i).getName() << setw(10) << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
 		}
 	}
 
