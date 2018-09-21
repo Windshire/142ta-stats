@@ -18,6 +18,9 @@ protected:
 	bool valid;
 
 public:
+	void addTaName(string taName) {
+		this->taName = taName;
+	}
 	void addStudent(string student) {
 		this->student = student;
 	}
@@ -44,7 +47,7 @@ private:
 	static string currentDate;
 	string date;
 	string student;
-	string helper;
+	//string helper;
 	string enqueue;
 	string dequeue;
 	string wait;
@@ -57,10 +60,10 @@ public:
 	void addDate(string date) {
 		this->date = date;
 	}
-	void addHelper(string helper) {
+	/*void addHelper(string helper) {
 		this->helper = helper;
 		this->taName = helper;
-	}
+	}*/
 	void addEnqueue(string enqueue) {
 		this->enqueue = enqueue;
 	}
@@ -87,9 +90,9 @@ public:
 	string getCurrentDate() const {
 		return currentDate;
 	}
-	string getHelper() const {
+	/*string getHelper() const {
 		return helper;
-	}
+	}*/
 	int getDuration() const {
 		return duration;
 	}
@@ -101,7 +104,7 @@ public:
 		ostringstream out;
 		out << date << " ";
 		out << student << " ";
-		out << helper << " ";
+		out << taName << " ";
 		out << enqueue << " ";
 		out << dequeue << " ";
 		out << wait << " ";
@@ -251,9 +254,9 @@ HelpInstance parseHelpInstance(string row) {
 	help.addStudent(cell);
 
 	getline(line, cell, ',');
-	help.addHelper(cell);
+	help.addTaName(cell);
 
-	if (help.getHelper() == "") {
+	if (help.getTaName() == "") {
 		cout << line.str() << endl;
 	}
 
@@ -347,9 +350,10 @@ string PrintInLabResults(vector<TeachingAssistant> teachingAssistants) {
 	out << endl;
 	out << setfill('-') << setw(112) << "-" << endl;
 	out << setfill(' ');
+	int rank = 1;
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
 		if (teachingAssistants.at(i).getName() != "Themselves") {
-			string num = to_string(i+1) + '.';
+			string num = to_string(rank++) + '.';
 			out << setw(5) << num << teachingAssistants.at(i).toString() << endl;
 		}
 	}
@@ -427,19 +431,34 @@ void populateArgs(string &inLabFile, string &gradingFile, int argc, char *argv[]
 string PrintGradingResults(vector<TeachingAssistant> teachingAssistants) {
 	ostringstream out;
 
-	//vector<TeachingAssistant> temp = teachingAssistants;
-
-	std::sort(teachingAssistants.begin(), teachingAssistants.end());
+	sort(teachingAssistants.begin(), teachingAssistants.end());
 
 	out << endl;
 	out << "NUMBER OF ASSIGNMENTS GRADED" << endl;
 	out << setfill('-') << setw(28) << "-" << endl;
 	out << setfill(' ');
 
+	int rank = 1;
+
+	/*REMOVE THIS LATER*/
+	/*
+	if (teachingAssistants.at(0).getName() == "David Cutler") {
+		for (int i = 0; i < teachingAssistants.size(); ++i) {
+			if (teachingAssistants.at(i).getName() == "Kwan-kyu Ko") {
+				teachingAssistants.erase(teachingAssistants.begin()+i);
+			}
+		}
+		string num = to_string(rank++) + '.';
+		out << left << setw(5) << num << setw(20) << "Kwan-kyu Ko" << setw(10) << teachingAssistants.at(0).getHelpInstanceTotal() + 1 << endl;
+	}
+	/*REMOVE THIS LATER*/
+
+	//
+
 	for (int i = 0; i < teachingAssistants.size(); ++i) {
-		if (teachingAssistants.at(i).getName() != "Not available") {
-			string num = to_string(i+1) + '.';
-			out << left << setw(5) << num << setw(20) << teachingAssistants.at(i).getName() << setw(10) << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
+		if (teachingAssistants.at(i).getName() != "Not available"/* && teachingAssistants.at(i).getName() != "Kwan-kyu Ko"*/) {
+			string num = to_string(rank++) + '.';
+			out << left << setw(5) << num << setw(25) << teachingAssistants.at(i).getName() << setw(10) << teachingAssistants.at(i).getHelpInstanceTotal() << endl;
 		}
 	}
 
